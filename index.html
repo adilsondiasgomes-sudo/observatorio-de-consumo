@@ -44,6 +44,46 @@ tr[data-detail-index],#productRows tr[data-product]{cursor:pointer}
 tr[data-detail-index]:hover,#productRows tr[data-product]:hover{background:#e1ebd5;box-shadow:inset 3px 0 #718b50}
 tr[data-detail-index]:focus-visible,#productRows tr[data-product]:focus-visible{outline:2px solid #718b50;outline-offset:-2px}
 .detail-link{padding:3px 0;background:none;border:0;box-shadow:none;text-align:left;color:#486431;text-decoration:underline;white-space:normal}
+
+/* Vidro verde com iluminação neon e conteúdo dividido em abas */
+:root{--muted:#526c61;--olive:#167556}
+html,body{height:100dvh;overflow:hidden!important}
+body{background:radial-gradient(ellipse at 95% 5%,#80ffc08c,transparent 42%),radial-gradient(ellipse at 25% 95%,#d5ef8399,transparent 45%),repeating-linear-gradient(115deg,#ffffff10 0 1px,transparent 1px 5px),linear-gradient(135deg,#d3e7d9,#b8d4c9);color:#163e30}
+header{background:#eefbf0a8;backdrop-filter:blur(22px);border-bottom:1px solid #ffffffb0}
+nav{background:radial-gradient(ellipse at top,#277b4b77,transparent 65%),repeating-linear-gradient(90deg,#ffffff04 0 1px,transparent 1px 4px),linear-gradient(160deg,#133d30,#071f1c);box-shadow:10px 0 35px #052b242b;border-right:1px solid #88ffbd55}
+nav button.active{background:linear-gradient(110deg,#94ffc82b,#d6ff771a);border-color:#a4ffb48a;color:#e9ffed;box-shadow:inset 3px 0 #b3ff65,0 0 22px #66ffa329}
+.brand em{box-shadow:0 0 24px #abff6770;background:linear-gradient(120deg,#efffd7,#8be6ae);color:#163f2e}
+.card{background:linear-gradient(130deg,#ffffffb8,#f1fff066 60%,#c8f9dc80);backdrop-filter:blur(20px) saturate(135%);border:1px solid #ffffffd0;box-shadow:0 14px 35px #143f3220,inset 0 1px 0 #fff,inset 0 -1px 0 #98e5b980;border-radius:22px}
+button{background:linear-gradient(130deg,#ffffffd9,#d2f1dcaa);border-color:#9ec8ac;color:#1d503b}
+button:hover,[data-detail-card]:hover{border-color:#a9f864;box-shadow:0 0 20px #a6ff6855,0 10px 24px #0d59352b}
+.primary{background:linear-gradient(120deg,#207c50,#244c32);border-color:#b4ff6777;color:#f3ffe8;box-shadow:0 8px 24px #124b3540,0 0 16px #a5ff5a22}
+#message{background:#e6f8eaa6;border-color:#ffffff88;color:#315f48}
+input,select,textarea{background:#fbfff4d9;border-color:#9ec7ab;color:#173d2d}
+th{background:#d1ebd8;color:#234c37}td{border-color:#b7d4be}
+.detail-cue,.detail-link{color:#286b3c}.stats{color:#164d32;text-shadow:0 1px #fff}
+main{overflow:hidden;min-height:0}.page{overflow:hidden!important;min-height:0}
+.subtabs{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.subtabs button{padding:9px 16px;font-size:13px}
+.subtabs button[aria-selected="true"]{background:linear-gradient(120deg,#315f38,#17604e);color:#efffdc;border-color:#b2ff6b;box-shadow:0 0 16px #b3ff6b40}
+.subpane{display:none;flex:1;min-height:0;overflow:hidden}
+.subpane.selected{display:flex;flex-direction:column;gap:12px}
+.subpane>.card{min-height:0}
+#home .home-grid{display:none}
+#home .subpane>.card{flex:1;overflow:hidden}
+#home .subpane .kpis{align-content:start}
+#home .subpane #categoriesSummary{overflow:auto;min-height:0;flex:1}
+#home .subpane>.card:has(#categoriesSummary){display:flex;flex-direction:column}
+#home .subpane>.calendar-card{flex:0 1 auto;max-width:760px;width:100%;align-self:center}
+#home .calendar-grid button{padding:clamp(6px,1.4vh,14px)}
+#home .subpane>.card:has(#homeChart){display:flex;flex-direction:column}
+#homeChart{min-height:0;flex:1;max-height:340px}
+#charts .subpane>#chartBox{min-height:0!important;flex:1;display:flex;flex-direction:column;overflow:hidden}
+#chart{min-height:0;flex:1;max-height:360px}
+#charts .subpane>.scroll{flex:1;min-height:0;max-height:none;overflow:auto}
+#charts .chart-filters{flex:0 1 auto;gap:10px}
+#charts .chart-kpis{flex-shrink:0}
+@media(max-width:700px){header{height:66px;padding:10px}main{padding:10px}.page-title p{display:none}.page{gap:9px}.subtabs{gap:5px}.subtabs button{padding:8px 10px;font-size:12px}.card{border-radius:16px}.kpis .card{padding:12px}#charts .chart-filters{padding:12px;gap:8px}#charts label{font-size:11px}#charts input,#charts select{padding:8px}.connection{display:none}}
+@media(max-height:650px){header{height:60px}main{padding-top:10px;padding-bottom:10px}.page{gap:8px}.page-title h2{font-size:22px}.page-title p{display:none}.card{padding:12px}.calendar-grid button{padding:5px!important}.calendar-nav{margin-bottom:5px}.detail-cue{margin-top:5px}#charts .chart-filters{padding:10px;gap:5px}#charts .chart-filters input,#charts .chart-filters select{padding:6px}}
 </style>
 <header><div><h1>Registros de Preços</h1><small>Observatório de Consumo · Evolução Histórica</small></div><div class="header-actions"><button id="export">Exportar dados</button><button class="primary" id="newReceipt">＋ Nova nota</button><button id="logout">Sair</button></div></header>
 <nav aria-label="Navegação principal"><div class="brand"><em>RP</em><div>Registros de Preços<small>Evolução Histórica</small></div></div><button data-tab="home" class="active">▦　Painel geral</button><button data-tab="products">▣　Produtos</button><button data-tab="charts">↗　Evolução e gráficos</button><button data-tab="stores">⌂　Lojas</button><button data-tab="receipts">▤　Notas fiscais</button><button data-tab="import">↑　Importar nota</button><div class="connection"><b>● Conta conectada</b>Seu histórico pessoal de consumo.<br><small>Observatório de Consumo</small></div></nav><div id="message" role="status">Conecte-se para carregar seus registros.</div>
@@ -173,5 +213,25 @@ $('storeCards').onclick=e=>{const b=e.target.closest('[data-store]');if(!b)retur
 
 $('productRows').onclick=e=>{const row=e.target.closest('[data-product]');if(row)productDetails(row.dataset.product)};
 $('productRows').onkeydown=e=>{if(e.target.matches('tr[data-product]')&&(e.key==='Enter'||e.key===' ')){e.preventDefault();productDetails(e.target.dataset.product)}};
+
+function buildSubtabs(pageId,groups){
+ const page=$(pageId),tabs=document.createElement('div');tabs.className='subtabs';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Seções de '+page.querySelector('h2').textContent);
+ page.querySelector('.page-title').after(tabs);
+ groups.forEach((group,index)=>{const panel=document.createElement('div');panel.className='subpane'+(index===0?' selected':'');panel.id=pageId+'Pane'+index;panel.setAttribute('role','tabpanel');const button=document.createElement('button');button.id=panel.id+'Tab';button.textContent=group.label;button.setAttribute('role','tab');button.setAttribute('aria-controls',panel.id);button.setAttribute('aria-selected',String(index===0));panel.setAttribute('aria-labelledby',button.id);button.onclick=()=>{tabs.querySelectorAll('button').forEach(b=>b.setAttribute('aria-selected',String(b===button)));page.querySelectorAll('.subpane').forEach(p=>p.classList.toggle('selected',p===panel));if(data.products){draw();drawHome()}};tabs.append(button);group.nodes.filter(Boolean).forEach(n=>panel.append(n));page.append(panel)});
+ tabs.onkeydown=e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;const buttons=[...tabs.querySelectorAll('button')],current=buttons.indexOf(document.activeElement);if(current<0)return;e.preventDefault();const index=e.key==='Home'?0:e.key==='End'?buttons.length-1:(current+(e.key==='ArrowRight'?1:-1)+buttons.length)%buttons.length;buttons[index].focus();buttons[index].click()};
+}
+buildSubtabs('home',[
+ {label:'Resumo',nodes:[document.querySelector('#home .kpis')]},
+ {label:'Evolução',nodes:[$('homeChart').closest('.card')]},
+ {label:'Categorias',nodes:[$('categoriesSummary').closest('.card')]},
+ {label:'Calendário',nodes:[document.querySelector('#home .calendar-card')]}
+]);
+buildSubtabs('charts',[
+ {label:'Gráfico',nodes:[$('chartMode').closest('.row'),$('chartBox')]},
+ {label:'Filtros',nodes:[document.querySelector('#charts .chart-filters')]},
+ {label:'Indicadores',nodes:[document.querySelector('#charts .chart-kpis'),$('chartNote')]},
+ {label:'Histórico',nodes:[$('history').closest('.card')]}
+]);
+const filterApply=document.createElement('button');filterApply.textContent='Aplicar e ver gráfico';filterApply.className='primary';filterApply.onclick=()=>$('chartsPane0Tab').click();$('chartsPane1').append(filterApply);
 if(session)load().catch(e=>{message(e.message);$('authMessage').textContent=e.message});
 </script></html>
