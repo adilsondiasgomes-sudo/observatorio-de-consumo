@@ -1,7 +1,7 @@
 {
   "id": "./",
   "name": "Observatório de Consumo",
-  "short_name": "Registros",
+  "short_name": "Observatório de Consumo",
   "description": "Compras, cupons e evolução dos preços por loja.",
   "lang": "pt-BR",
   "start_url": "./",
