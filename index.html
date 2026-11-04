@@ -99,6 +99,8 @@ main{overflow:hidden;min-height:0}.page{overflow:hidden!important;min-height:0}
  #auth form{max-height:90dvh;overflow:auto}
  dialog{max-height:85dvh;padding:14px}
 }
+
+.comparison-controls{display:grid;grid-template-columns:1fr 2fr;gap:10px;flex-shrink:0}.comparison-controls label{margin:0;font-size:12px;min-width:0}.comparison-controls select,.comparison-controls input{width:100%;min-width:0}#comparisonBody{overflow:auto;min-height:0;flex:1}#comparisonBody svg{width:100%;max-height:330px;display:block;font:13px system-ui}#chart[hidden]{display:none!important}.comparison-store{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;position:relative;text-align:left;margin:12px 0;padding:12px 12px 18px;white-space:normal;overflow:hidden}.comparison-store small,.comparison-evolution small{display:block;font-size:12px;margin-top:5px}.comparison-store i{position:absolute;bottom:0;left:0;height:5px}.comparison-store strong{white-space:nowrap}.comparison-evolution{padding:10px;margin:10px 0;background:#ffffff77;border-radius:8px}.comparison-evolution span{display:block;margin-top:5px;font-size:14px}#chartsPane0>.row{flex-shrink:0}#chartsPane0>.row label{margin:0}#chartLegend:empty{display:none}@media(max-width:700px){.comparison-controls{grid-template-columns:1fr}.comparison-controls label:first-child{display:none}#chartsPane0{gap:8px}#chartsPane0 .row button{padding:8px;font-size:12px}#comparisonBody h3{font-size:15px}#comparisonBody p{margin:8px 0;font-size:12px}.comparison-store{font-size:13px}.comparison-store small{font-size:11px}}
 </style>
 <header><div><h1>Registros de Preços</h1><small>Observatório de Consumo · Evolução Histórica</small></div><div class="header-actions"><button id="installApp" hidden>Instalar aplicativo</button><button id="export">Exportar dados</button><button class="primary" id="newReceipt">＋ Nova nota</button><button id="logout">Sair</button></div></header>
 <nav aria-label="Navegação principal"><div class="brand"><em>RP</em><div>Registros de Preços<small>Evolução Histórica</small></div></div><button data-tab="home" class="active">▦　Painel geral</button><button data-tab="products">▣　Produtos</button><button data-tab="charts">↗　Evolução e gráficos</button><button data-tab="stores">⌂　Lojas</button><button data-tab="receipts">▤　Notas fiscais</button><button data-tab="import">↑　Importar nota</button><div class="connection"><b>● Conta conectada</b>Seu histórico pessoal de consumo.<br><small>Observatório de Consumo</small></div></nav><div id="message" role="status">Conecte-se para carregar seus registros.</div>
@@ -248,6 +250,42 @@ buildSubtabs('charts',[
  {label:'Histórico',nodes:[$('history').closest('.card')]}
 ]);
 const filterApply=document.createElement('button');filterApply.textContent='Aplicar e ver gráfico';filterApply.className='primary';filterApply.onclick=()=>$('chartsPane0Tab').click();$('chartsPane1').append(filterApply);
+
+// Comparação do mesmo produto, preservando embalagem e unidade.
+const normalizeProductText=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+function comparisonKey(p){let unit=normalizeProductText(p.unit);if(['un','und','unidade'].includes(unit))unit='un';return normalizeProductText(p.name)+'|'+unit}
+function chartRecords(){const p=data.products?.find(p=>p.id===$('productFilter').value);if(!p)return [];return history().filter(i=>comparisonKey(i.product)===comparisonKey(p)&&(!$('storeFilter').value||i.purchase.store_id===$('storeFilter').value)&&(!$('from').value||i.date>=$('from').value)&&(!$('to').value||i.date<=$('to').value))}
+let comparisonInitialized=false;
+const previousSyncFilters=syncChartFilters;
+syncChartFilters=function(){previousSyncFilters();if(!comparisonInitialized&&data.purchase_items?.length){const scores=new Map();history().forEach(i=>{const k=comparisonKey(i.product);if(!scores.has(k))scores.set(k,{id:i.product_id,shops:new Set(),dates:new Set()});scores.get(k).shops.add(i.purchase.store_id);scores.get(k).dates.add(i.date)});const best=[...scores.values()].sort((a,b)=>b.shops.size-a.shops.size||b.dates.size-a.dates.size).find(v=>[...$('productFilter').options].some(o=>o.value===v.id));if(best)$('productFilter').value=best.id;comparisonInitialized=true}};
+const chartControls=document.createElement('div');chartControls.className='comparison-controls';$('chartsPane0').prepend(chartControls);chartControls.append($('chartSearch').closest('label'),$('productFilter').closest('label'));
+$('chartMode').innerHTML='<option value="bars">Comparar lojas</option><option value="line">Evolução por loja</option>';
+$('chartsPane0Tab').textContent='Comparação';
+const comparisonBody=document.createElement('div');comparisonBody.id='comparisonBody';$('chartBox').prepend(comparisonBody);$('chart').hidden=true;
+const comparisonDate=d=>d.split('-').reverse().join('/');
+function comparisonSeries(rows){const shops=new Map();for(const r of rows){const id=r.purchase.store_id;if(!shops.has(id))shops.set(id,{id,name:r.store,days:new Map()});const days=shops.get(id).days;if(!days.has(r.date))days.set(r.date,[]);days.get(r.date).push(r)}return [...shops.values()].map(s=>({...s,points:[...s.days].sort(([a],[b])=>a.localeCompare(b)).map(([date,rs])=>({date,price:rs.reduce((v,r)=>v+Number(r.quantity)*Number(r.unit_price),0)/rs.reduce((v,r)=>v+Number(r.quantity),0)}))}))}
+function draw(){if(!data.products||!$('comparisonBody'))return;const rows=chartRecords(),groups=comparisonSeries(rows),p=data.products.find(p=>p.id===$('productFilter').value),colors=['#176b4c','#b45e17','#3465b4','#9b4290','#667724','#b13945'];const prices=rows.map(r=>Number(r.unit_price));$('chartMin').textContent=rows.length?money(Math.min(...prices)):'—';$('chartMax').textContent=rows.length?money(Math.max(...prices)):'—';$('chartChange').textContent=groups.length===1&&groups[0].points.length>1&&groups[0].points[0].price>0?((groups[0].points.at(-1).price/groups[0].points[0].price-1)*100).toFixed(1)+'%':'—';$('history').innerHTML=rows.map(r=>'<tr><td>'+comparisonDate(r.date)+'</td><td>'+esc(r.store)+'</td><td>'+money(r.unit_price)+' / '+esc(r.product.unit)+'</td></tr>').join('');$('chartLegend').innerHTML='';let note='Comparação por '+(p?.unit||'unidade')+'. Mesma descrição e unidade; embalagens diferentes permanecem separadas. Preços do mesmo dia e loja: média ponderada pela quantidade.';$('chartNote').textContent=note;
+if(!rows.length){comparisonBody.innerHTML='<p class="empty">Nenhum registro para este produto e período. Ajuste os filtros.</p>';return}
+const latest=groups.map(g=>({...g,last:g.points.at(-1)})).sort((a,b)=>a.last.price-b.last.price);const min=latest[0].last.price,max=latest.at(-1).last.price;
+let html='<h3>'+esc(p?.name||'Produto')+'</h3><p class="chart-note">'+groups.length+' loja(s) · '+new Set(rows.map(r=>r.date)).size+' data(s) · preço por '+esc(p?.unit)+'</p>';
+if($('chartMode').value==='bars'){
+html+='<p><strong>'+(groups.length>1?'Menor preço registrado: '+money(min):'Ainda há registros de apenas uma loja.')+'</strong>'+(groups.length>1?' · Diferença entre lojas: '+money(max-min):'')+'</p>';
+html+=latest.map((g,index)=>'<button class="comparison-store" data-compare-store="'+esc(g.id)+'"><span><b>'+esc(g.name)+'</b><small>'+comparisonDate(g.last.date)+' · Ver evolução →</small></span><strong>'+money(g.last.price)+'</strong><i style="width:'+Math.max(1,(max?g.last.price/max:0)*100)+'%;background:'+colors[index%colors.length]+'"></i></button>').join('');html+='<p class="chart-note">Último preço de cada loja dentro do período selecionado. As datas podem ser diferentes; não são cotações de hoje.</p>';
+}else{
+const dates=rows.map(r=>Date.parse(r.date)),first=Math.min(...dates),last=Math.max(...dates);
+if(first===last)html+='<p class="empty">Há somente uma data registrada. A evolução aparecerá quando houver compras em outras datas.</p>';
+else{
+const all=groups.flatMap(g=>g.points.map(p=>p.price)),lo=Math.min(...all),hi=Math.max(...all),pad=Math.max((hi-lo)*.15,.1),bottom=Math.max(0,lo-pad),top=hi+pad;const px=d=>75+(Date.parse(d)-first)/(last-first)*510,py=v=>20+(top-v)/(top-bottom)*210;
+html+='<svg viewBox="0 0 640 285" role="img" aria-label="Histórico de preços por loja; valores detalhados na aba Histórico">';
+for(let n=0;n<5;n++){let y=20+n*52.5;html+='<path d="M75 '+y+'H585" stroke="#bccfc2"/><text x="5" y="'+(y+5)+'">'+money(top-(top-bottom)*n/4)+'</text>'}
+groups.forEach((g,j)=>{const color=colors[j%colors.length];html+='<polyline fill="none" stroke="'+color+'" stroke-width="3" points="'+g.points.map(p=>px(p.date)+','+py(p.price)).join(' ')+'"/>';g.points.forEach(p=>html+='<circle cx="'+px(p.date)+'" cy="'+py(p.price)+'" r="5" fill="'+color+'"><title>'+esc(g.name)+' · '+comparisonDate(p.date)+' · '+money(p.price)+'</title></circle>')});html+='<text x="75" y="268">'+comparisonDate(new Date(first).toISOString().slice(0,10))+'</text><text x="585" y="268" text-anchor="end">'+comparisonDate(new Date(last).toISOString().slice(0,10))+'</text></svg>';
+}
+html+=groups.map((g,j)=>{const a=g.points[0],b=g.points.at(-1),pct=a.price>0?(b.price/a.price-1)*100:null;return '<div class="comparison-evolution" style="border-left:4px solid '+colors[j%colors.length]+'"><b>'+esc(g.name)+'</b><small>'+comparisonDate(a.date)+' → '+comparisonDate(b.date)+'</small><span>'+money(a.price)+' → '+money(b.price)+' · '+(g.points.length>1&&pct!==null?(pct>0?'+':'')+pct.toFixed(1)+'%':'Sem evolução suficiente')+'</span></div>'}).join('');
+}
+comparisonBody.innerHTML=html;
+}
+comparisonBody.onclick=e=>{const b=e.target.closest('[data-compare-store]');if(b){$('storeFilter').value=b.dataset.compareStore;$('chartMode').value='line';draw()}};
+$('productFilter').onchange=draw;$('chartMode').onchange=draw;
 
 let installPrompt=null;
 window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;if(!matchMedia('(display-mode: standalone)').matches)$('installApp').hidden=false});
